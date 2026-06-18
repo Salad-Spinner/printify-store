@@ -6,7 +6,6 @@ on:
   # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
-
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -31,7 +30,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
+
       - name: Detect package manager
         id: detect-package-manager
         run: |
@@ -51,22 +50,21 @@ jobs:
             echo "Unable to determine package manager"
             exit 1
           fi
-          
-      - name: Setup Node
+
+      - name: Install Node.js Core
         uses: actions/setup-node@v4
         with:
-          node-version: "22" # Upgraded to v22 to resolve Astro compiler support requirements
-          cache: ${{ steps.detect-package-manager.outputs.manager }}
-          cache-dependency-path: ${{ env.BUILD_PATH }}/${{ steps.detect-package-manager.outputs.lockfile }}
-          
+          node-version: 22  # Update this line to use a supported version
+          cache: npm
+
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
-        
+
       - name: Install dependencies
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
         working-directory: ${{ env.BUILD_PATH }}
-        
+
       - name: Build with Astro
         # We pass your repository secret into the static site compilation process safely
         env:
@@ -76,7 +74,7 @@ jobs:
             --site "${{ steps.pages.outputs.origin }}" \
             --base "${{ steps.pages.outputs.base_path }}"
         working-directory: ${{ env.BUILD_PATH }}
-        
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
