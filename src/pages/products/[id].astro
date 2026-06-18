@@ -1,0 +1,180 @@
+---
+import https from 'https';
+
+export async function getStaticPaths() {
+  const apiToken = import.meta.env.PUBLIC_PRINTIFY_API_TOKEN;
+  const shopId = "27709817";
+
+  const fetchCatalogData = () => {
+    return new Promise((resolve, reject) => {
+      const options = {
+        hostname: 'api.printify.com',
+        port: 443,
+        path: `/v1/shops/${shopId}/products.json`,
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        timeout: 15000
+      };
+
+      const req = https.request(options, (res) => {
+        let data = '';
+        res.on('data', (chunk) => { data += chunk; });
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(JSON.parse(data));
+          } else {
+            reject(new Error(`Server error: ${res.statusCode}`));
+          }
+        });
+      });
+      req.on('error', (err) => reject(err));
+      req.end();
+    });
+  };
+
+  try {
+    const result = await fetchCatalogData();
+    const catalog = result.data || [];
+    
+    return catalog.map((product) => ({
+      params: { id: product.id },
+      props: { product },
+    }));
+  } catch (e) {
+    console.error("Failed to generate dynamic product routes:", e);
+    return [];
+  }
+}
+
+const { product } = Astro.props;
+
+const defaultVariant = product.variants ? product.variants[0] : null;
+const rawPrice = defaultVariant ? defaultVariant.price : 0;
+const displayPrice = (rawPrice / 100).toFixed(2);
+const defaultImage = product.images && product.images[0] ? product.images[0].src : "https://placehold.co";
+
+const snipcartCustomAttributes = product.options?.reduce((acc, opt, idx) => {
+  acc[`data-item-custom${idx + 1}-name`] = opt.name;
+  acc[`data-item-custom${idx + 1}-options`] = opt.values.map((v) => v.title).join('|');
+  return acc;
+}, {}) || {};
+---
+
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{product.title} | WAM Studios</title>
+    <style>
+      body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; background: #f8f9fa; color: #212529; }
+      .header-nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.02); position: sticky; top: 0; z-index: 100; }
+      .header-nav h1 { margin: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; }
+      .header-nav a { text-decoration: none; color: inherit; }
+      .snipcart-checkout { background: #111; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; text-decoration: none; font-size: 0.9rem; transition: background 0.2s; }
+      .snipcart-checkout:hover { background: #333; }
+      .snipcart-items-count { background: #00ff9f; color: #111; border-radius: 50%; padding: 2px 8px; font-size: 0.8rem; font-weight: 800; }
+
+      .main-content { padding: 40px; }
+      .back-link { display: inline-block; margin-bottom: 20px; color: #666; text-decoration: none; font-size: 0.9rem; }
+      .back-link:hover { color: #111; }
+      .container { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 50px; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+      .image-gallery img { width: 100%; height: auto; border-radius: 12px; object-fit: cover; background: #f1f3f5; }
+      h1 { font-size: 2rem; margin-top: 0; font-weight: 800; line-height: 1.2; }
+      .price { font-size: 1.75rem; font-weight: 700; margin: 20px 0; color: #111; }
+      .description { line-height: 1.6; color: #4a5568; margin-bottom: 30px; font-size: 1rem; }
+      .option-group { margin-bottom: 15px; }
+      .option-label { font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 6px; text-transform: uppercase; color: #666; }
+      .option-select { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #ced4da; background-color: #fff; font-size: 0.95rem; }
+      .btn { background: #111; color: white; border: none; padding: 16px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s; width: 100%; font-size: 1.1rem; }
+      .btn:hover { background: #333; }
+      @media (max-width: 768px) { .container { grid-template-columns: 1fr; gap: 30px; padding: 20px; } }
+            /* Snipcart Interface Polish Overrides */
+      .snipcart-modal__close, 
+      .snipcart-cart-header__close-button {
+        background: #111 !important;
+        color: white !important;
+        padding: 10px 20px !important;
+        border-radius: 6px !important;
+        font-weight: bold !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        text-decoration: none !important;
+      }
+      /* Dynamically alters the native close text to read clearer for shoppers */
+      .snipcart-cart-header__close-button::after {
+        content: " 🛍️ Keep Shopping" !important;
+        margin-left: 5px;
+      }
+
+    </style>
+  </head>
+  <body>
+
+    <header class="header-nav">
+      <a href="/printify-store/"><h1>WAM Studios Shop</h1></a>
+      <button class="snipcart-checkout">
+        🛒 Cart <span class="snipcart-items-count">0</span>
+      </button>
+    </header>
+
+    <main class="main-content">
+      <div style="max-width: 1000px; margin: 0 auto;">
+        <a href="/printify-store/" class="back-link">← Back to WAM Studios Shop</a>
+      </div>
+
+      <main class="container" id="product-page-wrapper">
+        <div class="image-gallery">
+          <img src={defaultImage} alt={product.title} />
+        </div>
+
+      <div>
+        <h1>{product.title}</h1>
+        <div class="price">${displayPrice}</div>
+        
+        <div class="description" set:html={product.description} />
+
+        {product.options && product.options.length > 0 && (
+          <div style="margin-bottom: 25px;">
+            {product.options.map((option) => (
+              <div class="option-group">
+                <label class="option-label">{option.name}:</label>
+                <select class="option-select">
+                  {option.values.map((val) => (
+                    <option value={val.title}>{val.title}</option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <button 
+          class="btn snipcart-add-item"
+          data-item-id={product.id}
+          data-item-name={product.title}
+          data-item-price={displayPrice}
+          data-item-url={Astro.url.href}
+          data-item-image={defaultImage}
+          {...snipcartCustomAttributes}
+        >
+          Add to Cart
+        </button>
+      </div>
+    </main>
+
+  <script>
+    window.SnipcartSettings = {
+        publicApiKey: 'YzAyYWMzNTctNjgyMS00MWI3LTg1MmYtMTRlOTFjOTk4Mzk5NjM5MTcyNjI4NjM3NjYwOTEx',
+        loadStrategy: 'on-user-interaction',
+    };
+
+    (()=>{var c,d;(d=(c=window.SnipcartSettings).version)!=null||(c.version="3.0");var s,S;(S=(s=window.SnipcartSettings).timeoutDuration)!=null||(s.timeoutDuration=2750);var l,p;(p=(l=window.SnipcartSettings).domain)!=null||(l.domain="cdn.snipcart.com");var w,u;(u=(w=window.SnipcartSettings).protocol)!=null||(w.protocol="https");var f=window.SnipcartSettings.version.includes("v3.0.0-ci")||window.SnipcartSettings.version!="3.0"&&window.SnipcartSettings.version.localeCompare("3.4.0",void 0,{numeric:!0,sensitivity:"base"})===-1,m=["focus","mouseover","touchmove","scroll","keydown"];window.LoadSnipcart=o;document.readyState==="loading"?document.addEventListener("DOMContentLoaded",r):r();function r(){window.SnipcartSettings.loadStrategy?window.SnipcartSettings.loadStrategy==="on-user-interaction"&&(m.forEach(t=>document.addEventListener(t,o)),setTimeout(o,window.SnipcartSettings.timeoutDuration)):o()}var a=!1;function o(){if(a)return;a=!0;let t=document.getElementsByTagName("head")[0],e=document.querySelector("#snipcart"),i=document.querySelector(`src[src^="${window.SnipcartSettings.protocol}://${window.SnipcartSettings.domain}"][src$="snipcart.js"]`),n=document.querySelector(`link[href^="${window.SnipcartSettings.protocol}://${window.SnipcartSettings.domain}"][href$="snipcart.css"]`);e||(e=document.createElement("div"),e.id="snipcart",e.setAttribute("hidden","true"),document.body.appendChild(e)),v(e),i||(i=document.createElement("script"),i.src=`${window.SnipcartSettings.protocol}://${window.SnipcartSettings.domain}/themes/v${window.SnipcartSettings.version}/default/snipcart.js`,i.async=!0,t.appendChild(i)),n||(n=document.createElement("link"),n.rel="stylesheet",n.type="text/css",n.href=`${window.SnipcartSettings.protocol}://${window.SnipcartSettings.domain}/themes/v${window.SnipcartSettings.version}/default/snipcart.css`,t.prepend(n)),m.forEach(g=>document.removeEventListener(g,o))}function v(t){!f||(t.dataset.apiKey=window.SnipcartSettings.publicApiKey,window.SnipcartSettings.addProductBehavior&&(t.dataset.configAddProductBehavior=window.SnipcartSettings.addProductBehavior),window.SnipcartSettings.modalStyle&&(t.dataset.configModalStyle=window.SnipcartSettings.modalStyle),window.SnipcartSettings.currency&&(t.dataset.currency=window.SnipcartSettings.currency),window.SnipcartSettings.templatesUrl&&(t.dataset.templatesUrl=window.SnipcartSettings.templatesUrl))}})();
+</script>
+  </body>
+</html>
