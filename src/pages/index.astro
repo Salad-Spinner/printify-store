@@ -117,7 +117,7 @@ if (!apiToken) {
     <main class="main-content">
       {errorMsg && <div class="error">{errorMsg}</div>}
       
-      <<div class="grid">
+      <div class="grid">
   {products.map((product) => {
     const defaultVariant = product.variants ? product.variants[0] : null;
     const rawPrice = defaultVariant ? defaultVariant.price : 0;
