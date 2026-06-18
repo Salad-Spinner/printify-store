@@ -118,21 +118,23 @@ if (!apiToken) {
       {errorMsg && <div class="error">{errorMsg}</div>}
       
       <div class="grid">
-        {products.map((product) => {
-          const defaultVariant = product.variants ? product.variants[0] : null;
-          const rawPrice = defaultVariant ? defaultVariant.price : 0;
-          const displayPrice = (rawPrice / 100).toFixed(2);
-          const defaultImage = product.images && product.images[0] ? product.images[0].src : "https://placehold.co";
+         {products.map((product) => {
+            const defaultVariant = product.variants ? product.variants[0] : null;
+            const rawPrice = defaultVariant ? defaultVariant.price : 0;
+            const displayPrice = (rawPrice / 100).toFixed(2);
+            const defaultImage = product.images && product.images[0] ? product.images[0].src : "https://placehold.co";
+    
+            // Explicitly construct the exact matching relative URL route
+            const exactProductUrl = `${import.meta.env.BASE_URL || '/'}products/${product.id}`;
 
-          const snipcartCustomAttributes = product.options?.reduce((acc, opt, idx) => {
-            acc[`data-item-custom${idx + 1}-name`] = opt.name;
-            acc[`data-item-custom${idx + 1}-options`] = opt.values.map(v => v.title).join('|');
-            // Default to the first option value dynamically
-            acc[`data-item-custom${idx + 1}-value`] = opt.values[0]?.title || '';
-            return acc;
-          }, {}) || {};
+            const snipcartCustomAttributes = product.options?.reduce((acc, opt, idx) => {
+              acc[`data-item-custom${idx + 1}-name`] = opt.name;
+              acc[`data-item-custom${idx + 1}-options`] = opt.values.map(v => v.title).join('|');
+              acc[`data-item-custom${idx + 1}-value`] = opt.values[0]?.title || '';
+              return acc;
+            }, {}) || {};
 
-          return (
+            return (
             <div class="card" data-product-id={product.id}>
               <div>
                 <a href={`${import.meta.env.BASE_URL}products/${product.id}`} style="text-decoration: none; color: inherit;">
@@ -167,7 +169,7 @@ if (!apiToken) {
                   data-item-id={product.id}
                   data-item-name={product.title}
                   data-item-price={displayPrice}
-                  data-item-url={`/${product.id}`}
+                  data-item-url={exactProductUrl}
                   data-item-image={defaultImage}
                   {...snipcartCustomAttributes}
                 >
@@ -180,22 +182,22 @@ if (!apiToken) {
       </div>
     </main>
 
-    <!-- Interactive Client Script to sync catalog selectors with Snipcart button states -->
-    <script>
-      document.querySelectorAll('.card').forEach(card => {
-        card.addEventListener('change', (e) => {
-          const target = e.target;
-          if (target && target.classList.contains('product-variant-dropdown')) {
-            const customIndex = target.getAttribute('data-custom-index');
-            const selectedValue = target.value;
-            const buyButton = card.querySelector('.snipcart-add-item');
-            if (buyButton) {
-              buyButton.setAttribute(`data-item-custom${customIndex}-value`, selectedValue);
-            }
-          }
-        });
-      });
-    </script>
+<script is:inline>
+  // Listens for variant selections and modifies Snipcart data parameters on-the-fly
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('change', (e) => {
+      const target = e.target;
+      if (target && target.classList.contains('product-variant-dropdown')) {
+        const customIndex = target.getAttribute('data-custom-index');
+        const button = card.querySelector('.snipcart-add-item');
+        if (button) {
+          // Updates the matching custom option data field
+          button.setAttribute(`data-item-custom${customIndex}-value`, target.value);
+        }
+      }
+    });
+  });
+</script>
 
   <script>
     window.SnipcartSettings = {
