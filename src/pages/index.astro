@@ -127,7 +127,7 @@ if (!apiToken) {
     const defaultImage = product.images && product.images[0] ? product.images[0].src : "https://placehold.co";
 
     // Explicitly construct the exact matching relative URL route
-    const exactProductUrl = `${import.meta.env.BASE_URL || '/'}products/${product.id}`;
+    const exactProductUrl = `${import.meta.env.BASE_URL}/products/${product.id}`;
 
     const snipcartCustomAttributes = product.options?.reduce((acc, opt, idx) => {
       acc[`data-item-custom${idx + 1}-name`] = opt.name;
