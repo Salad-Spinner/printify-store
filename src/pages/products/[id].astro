@@ -58,6 +58,7 @@ const rawPrice = defaultVariant ? defaultVariant.price : 0;
 const displayPrice = (rawPrice / 100).toFixed(2);
 const defaultImage = product.images && product.images[0] ? product.images[0].src : "https://placehold.co";
 
+
 const snipcartCustomAttributes = product.options?.reduce((acc, opt, idx) => {
   acc[`data-item-custom${idx + 1}-name`] = opt.name;
   acc[`data-item-custom${idx + 1}-options`] = opt.values.map((v) => v.title).join('|');
@@ -159,7 +160,7 @@ const snipcartCustomAttributes = product.options?.reduce((acc, opt, idx) => {
           data-item-id={product.id}
           data-item-name={product.title}
           data-item-price={displayPrice}
-          data-item-url={Astro.url.href}
+          data-item-url={{import.meta.env.BASE_URL}/products/${product.id}`}
           data-item-image={defaultImage}
           {...snipcartCustomAttributes}
         >
