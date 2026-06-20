@@ -1,0 +1,420 @@
+---
+import https from 'https';
+
+const apiToken = import.meta.env.PUBLIC_PRINTIFY_API_TOKEN;
+const shopId = "27709817"; 
+
+const fetchProductsLegacy = () => {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'api.printify.com',
+      port: 443,
+      path: `/v1/shops/${shopId}/products.json`,
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${apiToken}`,
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      timeout: 15000
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve(JSON.parse(data));
+        } else {
+          reject(new Error(`Server dropped response code: ${res.statusCode}`));
+        }
+      });
+    });
+
+    req.on('error', (err) => reject(err));
+    req.on('timeout', () => { req.destroy(); reject(new Error('Printify link timed out.')); });
+    req.end();
+  });
+};
+
+let products = [];
+let errorMsg = null;
+
+if (!apiToken) {
+  errorMsg = "API Token missing from .env profile. Ensure PUBLIC_PRINTIFY_API_TOKEN is set.";
+} else {
+  try {
+    const result = await fetchProductsLegacy();
+    products = result.data || [];
+  } catch (e) {
+    errorMsg = `System Blocked Outbound Stream: ${e.message}`;
+  }
+}
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>All Products | WAM Studios Store</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+
+      :root {
+        --primary: #00ff9f;
+        --dark: #0a0a0a;
+        --accent-cyan: #22d3ee;
+        --accent-orange: #f97316;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        color: white;
+        background: var(--dark);
+        overflow-x: hidden;
+        scroll-behavior: smooth;
+        min-height: 100vh;
+      }
+
+      body.animate-in {
+        animation: fade 2s ease-in;
+      }
+
+      header.header-nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        width: 100%;
+        background: rgba(10, 10, 10, 0.96);
+        backdrop-filter: blur(16px);
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .header-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px 40px;
+      }
+
+      .header-nav h1 {
+        margin: 0;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: clamp(1.75rem, 2.5vw, 2.4rem);
+        letter-spacing: -0.5px;
+        color: white;
+      }
+
+      .snipcart-checkout {
+        background: var(--primary);
+        color: #0a0a0a;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        text-decoration: none;
+        transition: transform 0.2s ease, background 0.2s ease;
+      }
+
+      .snipcart-checkout:hover {
+        transform: translateY(-1px);
+        background: #00eca8;
+      }
+
+      .snipcart-items-count {
+        background: #111;
+        color: var(--primary);
+        border-radius: 9999px;
+        padding: 2px 8px;
+        font-size: 0.8rem;
+        font-weight: 800;
+      }
+
+      .main-content {
+        padding: 40px;
+        max-width: 1280px;
+        margin: 0 auto;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 30px;
+      }
+
+      .card {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+        border-radius: 24px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-10px);
+        border-color: rgba(0,255,159,0.35);
+        box-shadow: 0 35px 90px rgba(0, 255, 159, 0.18);
+      }
+
+      .card img {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        object-fit: cover;
+        aspect-ratio: 1/1;
+        background: #111;
+      }
+
+      .card h2 {
+        font-size: 1.2rem;
+        margin: 15px 0 10px;
+        font-weight: 600;
+        line-height: 1.3;
+        color: white;
+      }
+
+      .price {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 15px;
+      }
+
+      .btn {
+        width: 100%;
+        background: var(--primary);
+        color: #0a0a0a;
+        border: none;
+        padding: 12px;
+        border-radius: 6px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 20px 40px rgba(0,255,159,0.25);
+      }
+
+      .error {
+        color: #fff;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.12);
+        padding: 15px;
+        border-radius: 6px;
+        max-width: 600px;
+        margin: 20px auto 2rem;
+        font-family: 'Inter', sans-serif;
+        text-align: center;
+      }
+
+      .options-container {
+        margin-bottom: 15px;
+      }
+
+      .option-group {
+        margin-bottom: 10px;
+      }
+
+      .option-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #cbd5e1;
+        margin-bottom: 4px;
+        display: block;
+      }
+
+      .option-select {
+        width: 100%;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: rgba(255,255,255,0.04);
+        color: white;
+        font-size: 0.95rem;
+      }
+
+      .option-select option {
+        color: #0a0a0a;
+      }
+
+      @keyframes fade {
+        0% { opacity: 0; filter: blur(50px); }
+        50% { opacity: 0.5; filter: blur(0px); }
+        100% { opacity: 1; filter: blur(0px); }
+      }
+      @keyframes inventivation {
+        0% { border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 25px; }
+        25% { border: 1px solid rgb(255, 0, 0); border-radius: 25px; }
+        50% { border: 1px solid rgb(0, 183, 255); border-radius: 25px; }
+        75% { border: 1px solid rgb(0, 255, 149); border-radius: 25px; }
+        100% { border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 25px; }
+      }
+
+      .card:hover {
+        animation: inventivation 3s infinite alternate;
+      }
+
+      /* Intro / Hero styles (inlined from design) */
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+
+      :root {
+        --primary: #00ff9f;
+        --dark: #0a0a0a;
+        --accent-cyan: #22d3ee;
+        --accent-orange: #f97316;
+      }
+
+      * { margin:0; padding:0; box-sizing: border-box; }
+
+      body { font-family: 'Inter', sans-serif; color: white; background: var(--dark); overflow-x: hidden; scroll-behavior: smooth; }
+
+      .section { min-height: 100vh; position: relative; display:flex; align-items:center; justify-content:center; scroll-snap-align: start; }
+
+      /* Intro Section */
+      #intro { background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%); text-align:center; padding: 6rem 20px; }
+
+      .hero-content { max-width: 800px; z-index:2; }
+
+      .hero-logo { width: 180px; height: 180px; margin: 0 auto 2rem; display:block; filter: drop-shadow(0 20px 40px rgba(0,255,159,0.25)); }
+
+      #intro h1 { font-family: 'Space Grotesk', sans-serif; font-size: clamp(2.4rem, 6vw, 4.2rem); margin-bottom: 1rem; background: linear-gradient(90deg,#fff,var(--primary)); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+      .subtitle { font-size: 1.15rem; opacity: 0.85; margin-bottom: 2rem; color: #d1d5db; }
+
+      .btn.hero-cta { display:inline-block; padding: 12px 28px; background: var(--primary); color:#070707; border-radius:9999px; font-weight:700; text-decoration:none; }
+
+    </style>
+  </head>
+  <body>
+
+    <!-- Unified Header Navigation Panel -->
+    <header class="header-nav">
+      <img src="/wamlogowhite.png" alt="WAM Studios Shop" class="site-logo" width="10%"/>
+      <!-- Snipcart Checkout Trigger Class Links directly with cart item state counts -->
+      <button class="snipcart-checkout">
+        🛒 Cart <span class="snipcart-items-count">0</span>
+      </button>
+    </header>
+    <main class="main-content">
+      {errorMsg && <div class="error">{errorMsg}</div>}
+      
+      <div class="grid">
+        {products.map((product) => {
+          const defaultVariant = product.variants ? product.variants[0] : null;
+          const rawPrice = defaultVariant ? defaultVariant.price : 0;
+          const displayPrice = (rawPrice / 100).toFixed(2);
+          const defaultImage = product.images && product.images[0] ? product.images[0].src : "https://placehold.co";
+
+          const snipcartCustomAttributes = product.options?.reduce((acc, opt, idx) => {
+            acc[`data-item-custom${idx + 1}-name`] = opt.name;
+            acc[`data-item-custom${idx + 1}-options`] = opt.values.map(v => v.title).join('|');
+            // Default to the first option value dynamically
+            acc[`data-item-custom${idx + 1}-value`] = opt.values[0]?.title || '';
+            return acc;
+          }, {}) || {};
+
+          return (
+            <div class="card" data-product-id={product.id}>
+              <div>
+                <a href={`${import.meta.env.BASE_URL}products/${product.id}`} style="text-decoration: none; color: inherit;">
+                  <img src={defaultImage} alt={product.title} loading="lazy" />
+                  <h2>{product.title}</h2>
+                </a>
+              </div>
+              
+              <div>
+                {product.options && product.options.length > 0 && (
+                  <div class="options-container">
+                    {product.options.map((option, oIdx) => (
+                      <div class="option-group">
+                        <label class="option-label">{option.name}:</label>
+                        <select 
+                          class="option-select product-variant-dropdown" 
+                          data-custom-index={oIdx + 1}
+                        >
+                          {option.values.map((val) => (
+                            <option value={val.title}>{val.title}</option>
+                          ))}
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div class="price">${displayPrice}</div>
+                
+                <button 
+                  class="btn snipcart-add-item"
+                  data-item-id={product.id}
+                  data-item-name={product.title}
+                  data-item-price={displayPrice}
+                  data-item-url={`/${product.id}`}
+                  data-item-image={defaultImage}
+                  {...snipcartCustomAttributes}
+                  class="addtocart"
+                >
+                  Add to Cart
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </main>
+    <iframe id="footer-frame" src="footer/footer" title="Portfolio Footer" scrolling="no" style="background-color: white;" width="100%" height="300px"></iframe>
+
+    <!-- Interactive Client Script to sync catalog selectors with Snipcart button states -->
+    <script>
+      document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('change', (e) => {
+          const target = e.target;
+          if (target && target.classList.contains('product-variant-dropdown')) {
+            const customIndex = target.getAttribute('data-custom-index');
+            const selectedValue = target.value;
+            const buyButton = card.querySelector('.snipcart-add-item');
+            if (buyButton) {
+              buyButton.setAttribute(`data-item-custom${customIndex}-value`, selectedValue);
+            }
+          }
+        });
+      });
+    </script>
+
+  <script>
+    window.SnipcartSettings = {
+        publicApiKey: 'YzAyYWMzNTctNjgyMS00MWI3LTg1MmYtMTRlOTFjOTk4Mzk5NjM5MTcyNjI4NjM3NjYwOTEx',
+        loadStrategy: 'on-user-interaction',
+        // Instructs Snipcart to inject a "Keep Shopping" action button pointing back to your home catalogue
+        modalClassName: 'snipcart-override',
+        addProductBehavior: 'none' 
+      };
+    (()=>{var c,d;(d=(c=window.SnipcartSettings).version)!=null||(c.version="3.0");var s,S;(S=(s=window.SnipcartSettings).timeoutDuration)!=null||(s.timeoutDuration=2750);var l,p;(p=(l=window.SnipcartSettings).domain)!=null||(l.domain="cdn.snipcart.com");var w,u;(u=(w=window.SnipcartSettings).protocol)!=null||(w.protocol="https");var f=window.SnipcartSettings.version.includes("v3.0.0-ci")||window.SnipcartSettings.version!="3.0"&&window.SnipcartSettings.version.localeCompare("3.4.0",void 0,{numeric:!0,sensitivity:"base"})===-1,m=["focus","mouseover","touchmove","scroll","keydown"];window.LoadSnipcart=o;document.readyState==="loading"?document.addEventListener("DOMContentLoaded",r):r();function r(){window.SnipcartSettings.loadStrategy?window.SnipcartSettings.loadStrategy==="on-user-interaction"&&(m.forEach(t=>document.addEventListener(t,o)),setTimeout(o,window.SnipcartSettings.timeoutDuration)):o()}var a=!1;function o(){if(a)return;a=!0;let t=document.getElementsByTagName("head")[0],e=document.querySelector("#snipcart"),i=document.querySelector(`src[src^="${window.SnipcartSettings.protocol}://${window.SnipcartSettings.domain}"][src$="snipcart.js"]`),n=document.querySelector(`link[href^="${window.SnipcartSettings.protocol}://${window.SnipcartSettings.domain}"][href$="snipcart.css"]`);e||(e=document.createElement("div"),e.id="snipcart",e.setAttribute("hidden","true"),document.body.appendChild(e)),v(e),i||(i=document.createElement("script"),i.src=`${window.SnipcartSettings.protocol}://${window.SnipcartSettings.domain}/themes/v${window.SnipcartSettings.version}/default/snipcart.js`,i.async=!0,t.appendChild(i)),n||(n=document.createElement("link"),n.rel="stylesheet",n.type="text/css",n.href=`${window.SnipcartSettings.protocol}://${window.SnipcartSettings.domain}/themes/v${window.SnipcartSettings.version}/default/snipcart.css`,t.prepend(n)),m.forEach(g=>document.removeEventListener(g,o))}function v(t){!f||(t.dataset.apiKey=window.SnipcartSettings.publicApiKey,window.SnipcartSettings.addProductBehavior&&(t.dataset.configAddProductBehavior=window.SnipcartSettings.addProductBehavior),window.SnipcartSettings.modalStyle&&(t.dataset.configModalStyle=window.SnipcartSettings.modalStyle),window.SnipcartSettings.currency&&(t.dataset.currency=window.SnipcartSettings.currency),window.SnipcartSettings.templatesUrl&&(t.dataset.templatesUrl=window.SnipcartSettings.templatesUrl))}})();
+</script>
+<script>
+  window.Snipcart.events.on('cart.confirmed', async (cartConfirmResponse) => {
+    await window.Snipcart.api.theme.cart.close();
+    window.location.replace("thankyou#m");
+})
+</script>
+  </body>
+</html>

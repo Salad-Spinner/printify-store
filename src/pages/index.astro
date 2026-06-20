@@ -263,16 +263,45 @@ if (!apiToken) {
         100% { opacity: 1; filter: blur(0px); }
       }
       @keyframes inventivation {
-        0% { border: 3px solid rgba(255, 255, 255, 0.12); border-radius: 6px; }
-        25% { border: 3px solid rgb(255, 0, 0); border-radius: 6px; }
-        50% { border: 3px solid rgb(0, 183, 255); border-radius: 6px; }
-        75% { border: 3px solid rgb(170, 0, 255); border-radius: 6px; }
-        100% { border: 3px solid rgb(255, 255, 255); border-radius: 6px; }
+        0% { border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 25px; }
+        25% { border: 1px solid rgb(255, 0, 0); border-radius: 25px; }
+        50% { border: 1px solid rgb(0, 183, 255); border-radius: 25px; }
+        75% { border: 1px solid rgb(0, 255, 149); border-radius: 25px; }
+        100% { border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 25px; }
       }
 
-      .snipcart-add-item:hover {
+      .card:hover {
         animation: inventivation 3s infinite alternate;
       }
+
+      /* Intro / Hero styles (inlined from design) */
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+
+      :root {
+        --primary: #00ff9f;
+        --dark: #0a0a0a;
+        --accent-cyan: #22d3ee;
+        --accent-orange: #f97316;
+      }
+
+      * { margin:0; padding:0; box-sizing: border-box; }
+
+      body { font-family: 'Inter', sans-serif; color: white; background: var(--dark); overflow-x: hidden; scroll-behavior: smooth; }
+
+      .section { min-height: 100vh; position: relative; display:flex; align-items:center; justify-content:center; scroll-snap-align: start; }
+
+      /* Intro Section */
+      #intro { background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%); text-align:center; padding: 6rem 20px; }
+
+      .hero-content { max-width: 800px; z-index:2; }
+
+      .hero-logo { width: 180px; height: 180px; margin: 0 auto 2rem; display:block; filter: drop-shadow(0 20px 40px rgba(0,255,159,0.25)); }
+
+      #intro h1 { font-family: 'Space Grotesk', sans-serif; font-size: clamp(2.4rem, 6vw, 4.2rem); margin-bottom: 1rem; background: linear-gradient(90deg,#fff,var(--primary)); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+      .subtitle { font-size: 1.15rem; opacity: 0.85; margin-bottom: 2rem; color: #d1d5db; }
+
+      .btn.hero-cta { display:inline-block; padding: 12px 28px; background: var(--primary); color:#070707; border-radius:9999px; font-weight:700; text-decoration:none; }
 
     </style>
   </head>
@@ -280,13 +309,19 @@ if (!apiToken) {
 
     <!-- Unified Header Navigation Panel -->
     <header class="header-nav">
-      <h1>WAM Studios Shop</h1>
+      <img src="/wamlogowhite.png" alt="WAM Studios Shop" class="site-logo" width="10%"/>
       <!-- Snipcart Checkout Trigger Class Links directly with cart item state counts -->
       <button class="snipcart-checkout">
         🛒 Cart <span class="snipcart-items-count">0</span>
       </button>
     </header>
-
+    <section id="intro" class="section">
+        <div class="hero-content">
+            <img src="/favicon.png" alt="WAM Logo" class="hero-logo">
+            <h1>&lt;Hello Merch.&gt;</h1>
+            <p class="subtitle">Scroll to see more!</p>
+        </div>
+    </section>
     <main class="main-content">
       {errorMsg && <div class="error">{errorMsg}</div>}
       
@@ -353,6 +388,7 @@ if (!apiToken) {
         })}
       </div>
     </main>
+    <iframe id="footer-frame" src="footer/footer" title="Portfolio Footer" scrolling="no" style="background-color: white;" width="100%" height="300px"></iframe>
 
     <!-- Interactive Client Script to sync catalog selectors with Snipcart button states -->
     <script>
@@ -380,6 +416,12 @@ if (!apiToken) {
         addProductBehavior: 'none' 
       };
     (()=>{var c,d;(d=(c=window.SnipcartSettings).version)!=null||(c.version="3.0");var s,S;(S=(s=window.SnipcartSettings).timeoutDuration)!=null||(s.timeoutDuration=2750);var l,p;(p=(l=window.SnipcartSettings).domain)!=null||(l.domain="cdn.snipcart.com");var w,u;(u=(w=window.SnipcartSettings).protocol)!=null||(w.protocol="https");var f=window.SnipcartSettings.version.includes("v3.0.0-ci")||window.SnipcartSettings.version!="3.0"&&window.SnipcartSettings.version.localeCompare("3.4.0",void 0,{numeric:!0,sensitivity:"base"})===-1,m=["focus","mouseover","touchmove","scroll","keydown"];window.LoadSnipcart=o;document.readyState==="loading"?document.addEventListener("DOMContentLoaded",r):r();function r(){window.SnipcartSettings.loadStrategy?window.SnipcartSettings.loadStrategy==="on-user-interaction"&&(m.forEach(t=>document.addEventListener(t,o)),setTimeout(o,window.SnipcartSettings.timeoutDuration)):o()}var a=!1;function o(){if(a)return;a=!0;let t=document.getElementsByTagName("head")[0],e=document.querySelector("#snipcart"),i=document.querySelector(`src[src^="${window.SnipcartSettings.protocol}://${window.SnipcartSettings.domain}"][src$="snipcart.js"]`),n=document.querySelector(`link[href^="${window.SnipcartSettings.protocol}://${window.SnipcartSettings.domain}"][href$="snipcart.css"]`);e||(e=document.createElement("div"),e.id="snipcart",e.setAttribute("hidden","true"),document.body.appendChild(e)),v(e),i||(i=document.createElement("script"),i.src=`${window.SnipcartSettings.protocol}://${window.SnipcartSettings.domain}/themes/v${window.SnipcartSettings.version}/default/snipcart.js`,i.async=!0,t.appendChild(i)),n||(n=document.createElement("link"),n.rel="stylesheet",n.type="text/css",n.href=`${window.SnipcartSettings.protocol}://${window.SnipcartSettings.domain}/themes/v${window.SnipcartSettings.version}/default/snipcart.css`,t.prepend(n)),m.forEach(g=>document.removeEventListener(g,o))}function v(t){!f||(t.dataset.apiKey=window.SnipcartSettings.publicApiKey,window.SnipcartSettings.addProductBehavior&&(t.dataset.configAddProductBehavior=window.SnipcartSettings.addProductBehavior),window.SnipcartSettings.modalStyle&&(t.dataset.configModalStyle=window.SnipcartSettings.modalStyle),window.SnipcartSettings.currency&&(t.dataset.currency=window.SnipcartSettings.currency),window.SnipcartSettings.templatesUrl&&(t.dataset.templatesUrl=window.SnipcartSettings.templatesUrl))}})();
+</script>
+<script>
+  window.Snipcart.events.on('cart.confirmed', async (cartConfirmResponse) => {
+    await window.Snipcart.api.theme.cart.close();
+    window.location.replace("thankyou#m");
+})
 </script>
   </body>
 </html>
