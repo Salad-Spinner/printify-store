@@ -1,8 +1,10 @@
+const useLocalDev = false;
+
 const localRoot = 'http://localhost:4321';
 const productionRoot = 'https://salad-spinner.github.io';
-const basePath = import.meta.env.BASE_URL || '/';
+const basePath = useLocalDev ? '/' : '/printify-store/';
 
-export const appRoot = new URL(basePath, import.meta.env.DEV ? localRoot : productionRoot).toString();
+export const appRoot = new URL(basePath, useLocalDev ? localRoot : productionRoot).toString();
 
 export function toAppUrl(path = '') {
   const value = String(path ?? '');
