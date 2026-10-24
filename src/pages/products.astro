@@ -416,8 +416,8 @@ if (!apiToken) {
 <script>
   window.Snipcart.events.on('cart.confirmed', async (cartConfirmResponse) => {
     await window.Snipcart.api.theme.cart.close();
-    window.location.replace("thankyou#m");
-})
+    window.location.replace(new URL('thankyou#m', window.location.origin + '/printify-store/').toString());
+  });
 </script>
   </body>
 </html>
