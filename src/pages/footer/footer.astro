@@ -1,3 +1,7 @@
+---
+import { appRoot, toAppUrl } from '../../lib/site';
+---
+
 <head>
 <style>
     /* Footer styles */
@@ -111,9 +115,9 @@
             <!-- Navigation -->
             <nav class="footer-centered__nav" aria-label="Main Footer Navigation">
                 <ul>
-                    <li><a href="/printify-store/" target="_top">Home</a></li>
-                    <li><a href="/printify-store/refund" target="_top">Refund Form</a></li>
-                    <li><a href="/printify-store/#/cart" target="_top">Cart</a></li>
+                    <li><a href={appRoot} target="_top">Home</a></li>
+                    <li><a href={toAppUrl('refund')} target="_top">Refund Form</a></li>
+                    <li><a href={toAppUrl('#/cart')} target="_top">Cart</a></li>
                     <!--<li><a href="#">Blog</a></li>
                     <li><a href="#">Contact</a></li>-->
                 </ul>

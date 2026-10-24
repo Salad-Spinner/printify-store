@@ -1,6 +1,8 @@
 import { defineConfig } from 'astro/config';
 
+const useLocalDev = true;
+
 export default defineConfig({
-  site: 'https://github.io', // Replace with your actual GitHub username URL
-  base: '/',
+  site: useLocalDev ? 'http://localhost:4321' : 'https://salad-spinner.github.io',
+  base: useLocalDev ? '/' : '/printify-store/',
 });
